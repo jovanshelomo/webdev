@@ -139,6 +139,9 @@ const products = [
   },
 ];
 
+// rehydrate cart from local storage if exist
+const rehydrateCart = JSON.parse(localStorage.getItem("cart") ?? "[]");
+
 const formatPrice = (price) => {
   return `Rp. ${Math.round(price).toLocaleString("id-ID")}`;
 };
@@ -267,6 +270,14 @@ class Product {
 
     this.qty = 0;
     this.render();
+
+    //check if rehydrate cart has this item
+    const rehydrateItem = rehydrateCart.find(
+      (rehydrateItem) => rehydrateItem.name == this.name
+    );
+    if (rehydrateItem) {
+      this.changeQty(rehydrateItem.qty);
+    }
   }
 
   render() {
@@ -305,12 +316,7 @@ class Product {
     this.element
       .querySelector(`[data-interaction="total"]`)
       .addEventListener("change", (e) => {
-        this.qty = parseInt(e.target.value);
-        // NaN check
-        if (!(this.qty >= 0)) {
-          this.qty = 0;
-        }
-        this.updateAll();
+        this.changeQty(parseInt(e.target.value));
       });
   }
 
@@ -323,6 +329,12 @@ class Product {
     if (this.qty == 0) return;
 
     this.qty--;
+    this.updateAll();
+  }
+
+  changeQty(qty) {
+    // NaN & negative check
+    this.qty = qty >= 0 ? qty : 0;
     this.updateAll();
   }
 
@@ -356,8 +368,23 @@ class Product {
     } else if (this.qty == 0 && this.cartItem) {
       cartManager.removeItem(this);
     }
+
+    //save to local storage
+    updateLocalStorage();
   }
 }
+
+const updateLocalStorage = () => {
+  localStorage.setItem(
+    "cart",
+    JSON.stringify(
+      cartDetails.items.map((item) => ({
+        name: item.product.name,
+        qty: item.product.qty,
+      }))
+    )
+  );
+};
 
 const showModal = () => {
   document.getElementById("modal-items-container").innerHTML = "";
@@ -397,7 +424,7 @@ const showModal = () => {
 };
 
 // render products
-products.map((item, index) => {
+const renderedProducts = products.map((item, index) => {
   new Product({
     ...item,
     index,
