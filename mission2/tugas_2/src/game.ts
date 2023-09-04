@@ -383,6 +383,14 @@ export default class Runner extends Phaser.Scene {
   }
 
   update(time, delta) {
+    //spawn road
+    const roadLast = this.layerRoad.getLast(true);
+    if (roadLast) {
+      if (roadLast.x <= 100) {
+        this.spawnRoad(roadLast.x + roadLast.width - (Math.floor(delta) - 6));
+      }
+    }
+
     const layerDecorationLast = this.layerDecoration.getLast(true);
     if (layerDecorationLast) {
       if (
@@ -436,14 +444,6 @@ export default class Runner extends Phaser.Scene {
       }
     } else {
       this.spawnObstacle(1900);
-    }
-
-    //spawn road
-    const roadLast = this.layerRoad.getLast(true);
-    if (roadLast) {
-      if (roadLast.x + roadLast.width < 1700) {
-        this.spawnRoad(roadLast.x + roadLast.width);
-      }
     }
 
     if (
